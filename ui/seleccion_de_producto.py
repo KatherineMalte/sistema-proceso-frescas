@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
 )
 from PySide6.QtGui import QIntValidator
-from utils.ventana_utils import aplicar_tamano
+from utils.ventana_utils import aplicar_tamano, _icono_pixmap
 from repositories.obtener_tipo_pza_repository import ObtenerTipoPzaRepository, TAMANO_PAGINA
 from utils import fechas
 from utils.colores import Colores
@@ -48,17 +48,6 @@ RUTA_ICONOS = os.path.join("assets", "icons", "icons")
 
 def _ruta_icono(nombre_archivo):
     return os.path.join(RUTA_ICONOS, nombre_archivo)
-
-
-def _icono_pixmap(nombre_archivo, tamano):
-    """Carga un ícono desde RUTA_ICONOS ya escalado; None si no existe."""
-    ruta = _ruta_icono(nombre_archivo)
-    if not os.path.isfile(ruta):
-        return None
-    pixmap = QPixmap(ruta)
-    if pixmap.isNull():
-        return None
-    return pixmap.scaled(tamano, tamano, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
 
 def _aplicar_sombra(widget, blur=18, dx=0, dy=4, alfa=40):
@@ -401,7 +390,7 @@ class SeleccionDeProducto(QWidget):
         circulo_icono.setStyleSheet(
             f"background: {COLOR_PRIMARIO_CLARO}; border-radius: 24px;"
         )
-        icono = _icono_pixmap(nombre_icono, 26)
+        icono = _icono_pixmap(_ruta_icono,nombre_icono, 26)
         if icono is not None:
             circulo_icono.setPixmap(icono)
             # Fondo del color primario para que el ícono blanco resalte.
@@ -461,7 +450,7 @@ class SeleccionDeProducto(QWidget):
         circulo_buscar.setStyleSheet(
             f"background: {COLOR_PRIMARIO}; border-radius: 18px;"
         )
-        icono_buscar = _icono_pixmap("search.png", 18)
+        icono_buscar = _icono_pixmap(_ruta_icono,"search.png", 18)
         if icono_buscar is not None:
             circulo_buscar.setPixmap(icono_buscar)
 

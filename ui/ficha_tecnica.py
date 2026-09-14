@@ -14,6 +14,8 @@ from utils import fechas
 from repositories.etiquetas.frescas_100x45 import construir_datos_etiqueta, imprimir_etiqueta_frescas, generar_vista_previa_pixmap,DatosEtiquetaFrescas,siguiente_consecutivo_etiqueta_canasta
 from services.bascula_service import bascula_service
 import shiboken6
+from PySide6.QtPrintSupport import QPrinterInfo
+from PySide6.QtWidgets import QComboBox  # agregar al import existente de QtWidgets
 ANCHO_CONTENIDO = 1150
 COLOR_PRIMARIO = "#1a6b6b"
 COLOR_PRIMARIO_OSCURO = "#134f4f"
@@ -666,10 +668,50 @@ class FichaTecnica(QWidget):
             padding: 10px;
         """)
         layout.addWidget(self.etiqueta_peso)
-
+        """
         self.etiqueta_peso_neto = QLabel(f"Peso neto        {self.peso_neto_kg:.3f} kg")
         self.etiqueta_peso_neto.setStyleSheet("color: #444; font-size: 13px;")
         layout.addWidget(self.etiqueta_peso_neto)
+        self.etiqueta_peso.setText("prueba123")
+        layout.addStretch()
+        return marco
+        """
+        self.etiqueta_peso_neto = QLabel(f"Peso neto        {self.peso_neto_kg:.3f} kg")
+        self.etiqueta_peso_neto.setStyleSheet("color: #444; font-size: 13px;")
+        layout.addWidget(self.etiqueta_peso_neto)
+
+        # --- Selector de impresora ---
+        etiqueta_impresora = QLabel("Impresora:")
+        etiqueta_impresora.setStyleSheet("color: #666; font-size: 13px; margin-top: 6px;")
+        layout.addWidget(etiqueta_impresora)
+
+        self.combo_impresora = QComboBox()
+        self.combo_impresora.setStyleSheet("""
+            QComboBox {
+                background-color: white;
+                border: 1px solid #D9E2E4;
+                border-radius: 6px;
+                padding: 6px;
+                font-size: 13px;
+                color: #222;
+            }
+        """)
+
+        nombres_impresoras = [impresora.printerName() for impresora in QPrinterInfo.availablePrinters()]
+        self.combo_impresora.addItems(nombres_impresoras)
+
+        # Preseleccionar: Godex si existe, si no la impresora por defecto de Windows
+        impresora_por_defecto = QPrinterInfo.defaultPrinter().printerName()
+        if "Godex ZX420i GZPL" in nombres_impresoras:
+            self.combo_impresora.setCurrentText("Godex ZX420i GZPL")
+        elif impresora_por_defecto in nombres_impresoras:
+            self.combo_impresora.setCurrentText(impresora_por_defecto)
+
+        self.impresora_seleccionada = self.combo_impresora.currentText()
+        self.combo_impresora.currentTextChanged.connect(self._on_impresora_cambiada)
+
+        layout.addWidget(self.combo_impresora)
+
         self.etiqueta_peso.setText("prueba123")
         layout.addStretch()
         return marco
@@ -677,6 +719,8 @@ class FichaTecnica(QWidget):
     # ==============================================================
     # DATOS ADICIONALES
     # ==============================================================
+    def _on_impresora_cambiada(self, nombre_impresora: str) -> None:
+        self.impresora_seleccionada = nombre_impresora
     def _crear_datos_adicionales(self) -> QFrame:
         marco = QFrame()
         marco.setStyleSheet("""
@@ -741,12 +785,21 @@ class FichaTecnica(QWidget):
     def _guardar_peso(self):
         self._parametros_etiqueta_actuales = self._construir_parametros_etiqueta()
         datos = construir_datos_etiqueta(**self._parametros_etiqueta_actuales)
-        imprimir_etiqueta_frescas(datos, "Godex ZX420i GZPL")
-
-
-    def _volver_a_seleccion_de_producto(self,event):
+        imprimir_etiqueta_frescas(datos, self.impresora_seleccionada)
+        #imprimir_etiqueta_frescas(datos, "Godex ZX420i GZPL")
+        
+    def _limpiar_y_volver(self):
         bascula_service.peso_actualizado.disconnect(self._on_peso_actualizado)
+        bascula_service.detener()
+        self._app.mostrar_seleccion_sin_recargar()       
+         
+    def closeEvent(self, event):
+        self._limpiar_y_volver()
         super().closeEvent(event)
+
+    def _volver_a_seleccion_de_producto(self):
+        bascula_service.peso_actualizado.disconnect(self._on_peso_actualizado)
+        self._limpiar_y_volver
         bascula_service.detener()
         self._app.mostrar_seleccion_sin_recargar()
 

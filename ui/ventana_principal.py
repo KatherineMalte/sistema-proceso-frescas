@@ -858,7 +858,6 @@ class VentanaPrincipal(QWidget):
     def _tipo_pieza_elegido(self, tpo_pza, nombre_tipo_pieza):
         if self.especie_seleccionada not in TIPOS_PIEZA_POR_ESPECIE:
             return
-        print(f"Pieza seleccionada: {nombre_tipo_pieza}")
         self._avanzar_a_seleccion_producto(
             self.especie_seleccionada,
             self._nombre_especie_pendiente,
@@ -887,9 +886,6 @@ class VentanaPrincipal(QWidget):
         if not self.validar_combo():
             return
         lote_seleccionado = self.campo_lote.currentData()
-        print(f"Lote seleccionado (objeto): {lote_seleccionado}")
-        print(f"Lote seleccionado (texto): {self.campo_lote.currentText()}")
-        print(f"Índice actual del combo: {self.campo_lote.currentIndex()}")
         fecha = self.campo_fecha.date()
         fecha_bd = fecha.toString("yyyy/MM/dd")
         try:

@@ -11,7 +11,7 @@ from repositories.empresa_repository import (
     obtener_ciudad_empresa_db,
     obtener_fabricado_empresa_db,
     obtener_telefono_empresa_db,
-    obtener_fabricado_empresa_direccion_db
+    obtener_fabricado_empresa_direccion_db,
 )
 from repositories.consecutivo_repository import (
     ConsecutivoParametros,
@@ -38,16 +38,28 @@ ANCHO = 1000
 ALTO = 450
 
 # Margen general de la etiqueta.
-MARGEN = 44
+# IMPORTANTE: este mismo valor se usa ahora para los CUATRO lados
+# (izquierda, derecha, arriba y abajo) para que la etiqueta quede
+# balanceada visualmente. Antes el margen inferior (junto al QR)
+# usaba un valor fijo distinto (20) y el superior otro (14).
+MARGEN = 40
 
-QR_SIZE = 169
-SEPARACION_QR = 18
+QR_SIZE = 160
+SEPARACION_QR = 10
 GROSOR_LINEA = 5
+ALTO_BLOQUE_INFERIOR = 170
+
 
 TEMPERATURA_MINIMA_C = 0
 TEMPERATURA_MAXIMA_C = 4
-RECOMENDACION_CONSERVACION = "Mantengase Refrigerado entre 0°C y 4°C"
-RECOMENDACION_USO = "consumase bien cocido a temperatura superior de 70°C"
+
+RECOMENDACION_CONSERVACION = (
+    "Mantengase Refrigerado entre 0°C y 4°C"
+)
+
+RECOMENDACION_USO = (
+    "consumase bien cocido a temperatura superior de 70°C"
+)
 
 CODIGO_PROCESO_DEFAULT = socket.gethostname()
 
@@ -66,12 +78,19 @@ def _ruta_icono(nombre_archivo: str) -> str:
 
 def _ruta_fuente(nombre_archivo: str) -> Path:
     raiz_proyecto = Path(__file__).resolve().parent.parent.parent
-    return raiz_proyecto / "assets" / "icons" / "fuentes" / nombre_archivo
+    return (
+        raiz_proyecto
+        / "assets"
+        / "icons"
+        / "fuentes"
+        / nombre_archivo
+    )
 
 
 def _cargar_pixmap(nombre_archivo: str) -> Optional[QPixmap]:
     """
     Carga una imagen sin escalarla.
+
     El escalado se hace únicamente al momento de imprimir para conservar
     la mejor calidad posible.
     """
@@ -89,14 +108,13 @@ def _cargar_pixmap(nombre_archivo: str) -> Optional[QPixmap]:
 
 
 def crear_etiqueta_marca() -> Optional[QPixmap]:
-
     return _cargar_pixmap("logo_marca.png")
+
 
 
 # ======================================================================
 # DATOS AUXILIARES
 # ======================================================================
-
 
 def siguiente_consecutivo_etiqueta_canasta() -> int:
     params = ConsecutivoParametros(
@@ -133,7 +151,10 @@ def _generar_contenido_qr(
 
     if peso_neto_kg is not None:
         peso_redondeado = round(peso_neto_kg, 2)
-        peso_fmt = f"{peso_redondeado:05.2f}".replace(".", "0")
+        peso_fmt = (
+            f"{peso_redondeado:05.2f}"
+            .replace(".", "0")
+        )
     else:
         peso_fmt = "0" * 5
 
@@ -145,7 +166,16 @@ def _generar_contenido_qr(
         else "0" * 8
     )
 
-    return f"{lote_fmt}{nivel_fmt}{plu_fmt}{peso_fmt}{piezas_fmt}{fecha_fmt}"
+    return (
+        f"{lote_fmt}"
+        f"{nivel_fmt}"
+        f"{plu_fmt}"
+        f"{peso_fmt}"
+        f"{piezas_fmt}"
+        f"{fecha_fmt}"
+    )
+
+
 # ======================================================================
 # DATOS DE LA ETIQUETA
 # ======================================================================
@@ -198,7 +228,6 @@ def construir_datos_etiqueta(
     cod_empresa: int,
     peso_bascula: Optional[float],
     tipo_limpieza_seleccionado: Optional[int] = None,
-    
     numero_ticket: Optional[int] = None,
     fecha_sacrificio: Optional[date] = None,
     nom_impr_etiq: Optional[str] = None,
@@ -207,9 +236,13 @@ def construir_datos_etiqueta(
 
     fecha_produccion = fechas._asegurar_date(fecha_produccion)
     fecha_sacrificio = fechas._asegurar_date(fecha_sacrificio)
-    fecha_vencimiento_str = fechas._asegurar_date(fecha_vencimiento_str)
+    fecha_vencimiento_str = fechas._asegurar_date(
+        fecha_vencimiento_str
+    )
 
-    descripcion = f"{producto.cdgo_plu}-{producto.nom_prog}".strip()
+    descripcion = (
+        f"{producto.cdgo_plu}-{producto.nom_prog}"
+    ).strip()
 
     fecha_sacrificio_str = (
         fecha_sacrificio.strftime("%d/%m/%Y")
@@ -220,11 +253,11 @@ def construir_datos_etiqueta(
     # Obtener el peso una sola vez para usar exactamente el mismo valor
     # tanto en el contenido del QR como en los datos de la etiqueta.
     peso_neto_kg = bascula_service.obtener_ultimo_peso()
-    #print(f"'numero de PESO NETO': {peso_neto_kg}")
+
     contenido_qr = _generar_contenido_qr(
         lote=lote,
         cdgo_plu=producto.cdgo_plu,
-        peso_neto_kg = peso_neto_kg,
+        peso_neto_kg=peso_neto_kg,
         nivel_limpieza=tipo_limpieza_seleccionado,
         piezas=1,
         fecha_vencimiento_str=fecha_vencimiento_str,
@@ -245,19 +278,26 @@ def construir_datos_etiqueta(
         numEspecie=numEspecie,
 
         fabricante_nombre=obtener_fabricado_empresa_db(),
-        fabricante_direccion=obtener_fabricado_empresa_direccion_db(),
+        fabricante_direccion=(
+            obtener_fabricado_empresa_direccion_db()
+        ),
         fabricante_ciudad=obtener_ciudad_empresa_db(),
         fabricante_telefono=obtener_telefono_empresa_db(),
 
         temperatura_minima_c=TEMPERATURA_MINIMA_C,
         temperatura_maxima_c=TEMPERATURA_MAXIMA_C,
-        recomendacion_conservacion=RECOMENDACION_CONSERVACION,
+        recomendacion_conservacion=(
+            RECOMENDACION_CONSERVACION
+        ),
         recomendacion_uso=RECOMENDACION_USO,
 
         marca=crear_etiqueta_marca(),
 
         categoria=nom_impr_etiq or "",
-        codigo=construir_codigo(nombre_usuario, numero_ticket),
+        codigo=construir_codigo(
+            nombre_usuario,
+            numero_ticket,
+        ),
 
         qr_izquierda=contenido_qr,
         qr_derecha=contenido_qr,
@@ -265,7 +305,8 @@ def construir_datos_etiqueta(
 
 
 # ======================================================================
-# DIBUJO (compartido entre impresión y vista previa)
+# DIBUJO
+# Compartido entre impresión y vista previa
 # ======================================================================
 
 def _dibujar_contenido_etiqueta(
@@ -273,31 +314,61 @@ def _dibujar_contenido_etiqueta(
     datos: DatosEtiquetaFrescas,
 ) -> None:
     """
-    Dibuja el contenido completo de la etiqueta (QR, textos, logo) sobre
-    un QPainter ya preparado con el sistema de coordenadas ANCHO x ALTO
-    (1000 x 450). Se usa TANTO para imprimir como para la vista previa en
-    pantalla, así ambas salidas son siempre idénticas y el diseño solo
-    existe en un solo lugar.
+    Dibuja el contenido completo de la etiqueta (QR, textos, logo)
+    sobre un QPainter ya preparado con el sistema de coordenadas
+    ANCHO x ALTO (1000 x 450).
+
+    Se usa TANTO para imprimir como para la vista previa en pantalla,
+    así ambas salidas son siempre idénticas y el diseño solo existe
+    en un solo lugar.
     """
+
     x_full = MARGEN
     ancho_full = ANCHO - (MARGEN * 2)
 
-    x_entre_qr = MARGEN + QR_SIZE + SEPARACION_QR
-    ancho_entre_qr = ANCHO - (
-        2 * (MARGEN + QR_SIZE + SEPARACION_QR)
+    x_entre_qr = (
+        MARGEN
+        + QR_SIZE
+        + SEPARACION_QR
     )
+
+    ancho_entre_qr = ANCHO - (
+        2 * (
+            MARGEN
+            + QR_SIZE
+            + SEPARACION_QR
+        )
+    )
+
+    # ================================================================
+    # MARGEN Y ALINEACIÓN DEL BLOQUE INFERIOR (QR + logo/categoría/código)
+    # ================================================================
+    # Requisito: el margen debe ser igual en los 4 lados. El QR ya
+    # respetaba MARGEN a la izquierda y a la derecha; ahora también lo
+    # respeta abajo (antes usaba un valor fijo de 20).
+    qr_y = ALTO - QR_SIZE - MARGEN
+
+    # Pequeña separación entre el bloque de texto superior y la franja
+    # inferior (QR + logo). Es un espaciado interno, no un margen de
+    # etiqueta, por eso se mantiene como una constante pequeña aparte.
+    SEPARACION_BLOQUES = 10
 
     # ================================================================
     # FUNCIONES AUXILIARES
     # ================================================================
 
-    def fuente(tamano: int, negrita: bool = False) -> QFont:
+    def fuente(
+        tamano: int,
+        negrita: bool = False,
+    ) -> QFont:
         font = QFont("Arial")
         font.setWeight(
-            QFont.Weight.Bold if negrita
+            QFont.Weight.Bold
+            if negrita
             else QFont.Weight.Normal
         )
         font.setPixelSize(tamano)
+
         return font
 
     def texto(
@@ -310,9 +381,20 @@ def _dibujar_contenido_etiqueta(
         negrita=False,
         alineacion=Qt.AlignmentFlag.AlignLeft,
     ):
-        painter.setFont(fuente(tamano, negrita))
+        painter.setFont(
+            fuente(
+                tamano,
+                negrita,
+            )
+        )
+
         painter.drawText(
-            QRectF(x, y, ancho, alto),
+            QRectF(
+                x,
+                y,
+                ancho,
+                alto,
+            ),
             alineacion,
             str(contenido),
         )
@@ -350,6 +432,52 @@ def _dibujar_contenido_etiqueta(
             alineacion=Qt.AlignmentFlag.AlignRight,
         )
 
+    def fila_tres_columnas(
+        y,
+        alto,
+        izquierda,
+        centro,
+        derecha,
+        tamano=24,
+    ):
+        """
+        Dibuja tres textos en una misma fila:
+
+        Fecha Beneficio | Lote | Fecha Vencimiento
+        """
+
+        ancho_columna = ancho_full / 3
+
+        texto(
+            x_full,
+            y,
+            ancho_columna,
+            alto,
+            izquierda,
+            tamano=tamano,
+            alineacion=Qt.AlignmentFlag.AlignLeft,
+        )
+
+        texto(
+            x_full + ancho_columna,
+            y,
+            ancho_columna,
+            alto,
+            centro,
+            tamano=tamano,
+            alineacion=Qt.AlignmentFlag.AlignCenter,
+        )
+
+        texto(
+            x_full + (ancho_columna * 2),
+            y,
+            ancho_columna,
+            alto,
+            derecha,
+            tamano=tamano,
+            alineacion=Qt.AlignmentFlag.AlignRight,
+        )
+
     def dibujar_logo_centrado(
         pixmap: Optional[QPixmap],
         x,
@@ -358,9 +486,10 @@ def _dibujar_contenido_etiqueta(
         alto,
     ):
         """
-        Dibuja el logo manteniendo su proporción y aprovechando el espacio
-        disponible entre los dos QR.
+        Dibuja el logo manteniendo su proporción y aprovechando
+        el espacio disponible entre los dos QR.
         """
+
         if pixmap is None or pixmap.isNull():
             return
 
@@ -371,8 +500,13 @@ def _dibujar_contenido_etiqueta(
             Qt.TransformationMode.SmoothTransformation,
         )
 
-        x_destino = x + (ancho - logo.width()) / 2
-        y_destino = y + (alto - logo.height()) / 2
+        x_destino = (
+            x + (ancho - logo.width()) / 2
+        )
+
+        y_destino = (
+            y + (alto - logo.height()) / 2
+        )
 
         painter.drawPixmap(
             int(x_destino),
@@ -383,8 +517,6 @@ def _dibujar_contenido_etiqueta(
     # ================================================================
     # QR
     # ================================================================
-
-    qr_y = ALTO - QR_SIZE - 20
 
     if datos.qr_izquierda:
         dibujar_qr(
@@ -399,7 +531,11 @@ def _dibujar_contenido_etiqueta(
         )
 
     if datos.qr_derecha:
-        x_qr_derecha = ANCHO - MARGEN - QR_SIZE
+        x_qr_derecha = (
+            ANCHO
+            - MARGEN
+            - QR_SIZE
+        )
 
         dibujar_qr(
             painter,
@@ -415,9 +551,33 @@ def _dibujar_contenido_etiqueta(
     # ================================================================
     # PARTE SUPERIOR
     # ================================================================
+    # El contenido (textos) sigue siendo exactamente el mismo que antes
+    # y viene de las mismas variables de "datos". Lo único que cambia es
+    # el espaciado vertical entre filas: en vez de usar saltos fijos en
+    # pixeles "a ojo", se calcula el espacio realmente disponible entre
+    # el margen superior (MARGEN) y el inicio de la franja del QR
+    # (qr_y), y se reparte proporcionalmente entre las mismas filas de
+    # siempre. Así, si mañana cambia ALTO, MARGEN o QR_SIZE (por
+    # ejemplo, por un driver/impresora distinto), el bloque de texto se
+    # adapta solo y nunca se monta con el QR.
 
-    # Descripción del producto.
-    y = 14
+    pesos_filas = [42, 36, 40, 29, 30, 27, 32]
+
+    alto_disponible_superior = (
+        (qr_y - SEPARACION_BLOQUES) - MARGEN
+    )
+
+    factor_escala = (
+        alto_disponible_superior / sum(pesos_filas)
+    )
+
+    saltos = [
+        round(peso * factor_escala)
+        for peso in pesos_filas
+    ]
+
+    # Margen superior (igual al de los demás lados).
+    y = MARGEN
 
     texto(
         x_full,
@@ -429,7 +589,7 @@ def _dibujar_contenido_etiqueta(
         negrita=True,
     )
 
-    y += 42
+    y += saltos[0]
 
     # Fecha de empaque | Peso / lote / nivel.
     nivel_texto = (
@@ -443,38 +603,49 @@ def _dibujar_contenido_etiqueta(
         if datos.fecha_fabricacion
         else ""
     )
-    peso_texto = f"{datos.peso_neto_kg:.2f}kg " if datos.peso_neto_kg is not None else "--.--kg "
+
+    peso_texto = (
+        f"{datos.peso_neto_kg:.2f}kg"
+        if datos.peso_neto_kg is not None
+        else "--.--kg"
+    )
+
     fila_dos_columnas(
         y,
         34,
         f"Fecha Empaque: {fecha_empaque}",
-        (
-            f"Peso Neto:{peso_texto}"
-            f"Lote:{datos.lote}{nivel_texto}"
-        ),
+        f"Contenido Neto:{peso_texto}",
         tamano=25,
         negrita_der=True,
         prop_izq=0.42,
     )
 
-    y += 36
+    y += saltos[1]
 
-    # Fecha beneficio | Fecha de vencimiento.
+    # ================================================================
+    # FECHA BENEFICIO | LOTE | FECHA VENCIMIENTO
+    # ================================================================
+
+    num_lote = (
+        f"Lote:{datos.lote}{nivel_texto}"
+    )
+
     fecha_vencimiento = (
         datos.fecha_vencimiento_str.strftime("%d/%m/%Y")
         if datos.fecha_vencimiento_str
         else ""
     )
 
-    fila_dos_columnas(
+    fila_tres_columnas(
         y,
         34,
         f"Fecha Beneficio: {datos.fecha_sacrificio}",
+        num_lote,
         f"F.Vto.Refrigeracion: {fecha_vencimiento}",
-        tamano=28,
+        tamano=22,
     )
 
-    y += 40
+    y += saltos[2]
 
     # ================================================================
     # FABRICANTE
@@ -490,13 +661,12 @@ def _dibujar_contenido_etiqueta(
         negrita=True,
     )
 
-    y += 29
+    y += saltos[3]
 
     direccion = (
         f"{datos.fabricante_direccion} "
         f"Tel.{datos.fabricante_telefono} "
-        f"{datos.fabricante_ciudad}, "
-        f"{datos.fabricante_telefono}"
+        f"{datos.fabricante_ciudad} "
     )
 
     texto(
@@ -508,7 +678,7 @@ def _dibujar_contenido_etiqueta(
         tamano=24,
     )
 
-    y += 30
+    y += saltos[4]
 
     # ================================================================
     # CONSERVACIÓN
@@ -523,18 +693,19 @@ def _dibujar_contenido_etiqueta(
         tamano=24,
     )
 
-    y += 27
+    y += saltos[5]
 
     texto(
         x_full,
         y,
         ancho_full,
         27,
-        f"Recomendación de Uso: {datos.recomendacion_uso}",
+        f"Recomendación de Uso: "
+        f"{datos.recomendacion_uso}",
         tamano=24,
     )
 
-    y += 32
+    y += saltos[6]
 
     # ================================================================
     # LÍNEA DIVISORIA
@@ -551,14 +722,55 @@ def _dibujar_contenido_etiqueta(
         int(y),
     )
 
-    painter.setPen(Qt.GlobalColor.black)
+    painter.setPen(
+        Qt.GlobalColor.black
+    )
 
-    y += 10
+    # ================================================================
+    # BLOQUE INFERIOR: LOGO + CATEGORÍA + CÓDIGO
+    # ================================================================
+    # Requisito: estos tres elementos deben quedar alineados/centrados
+    # a la misma altura que ocupa el QR (de qr_y a qr_y + QR_SIZE), en
+    # vez de seguir bajando hasta salirse de la etiqueta. Para lograrlo,
+    # el bloque completo se calcula para empezar exactamente en qr_y y
+    # terminar exactamente en qr_y + QR_SIZE, repartiendo ese espacio
+    # entre el logo, la categoría y el código.
+# ================================================================
+# BLOQUE INFERIOR
+# ================================================================
 
-    alto_bloque_marca = ALTO - y - 20
+    #espacio_entre_elementos = 5
+    #alto_categoria = 32
+    #alto_codigo = 24
+    alto_logo = 140
+    alto_categoria = 30
+    alto_codigo = 22
+    espacio_entre_elementos = 2
 
-    # Subimos el bloque completo
-    y_marca = y + (alto_bloque_marca * 0.05)
+    alto_logo = (
+        ALTO_BLOQUE_INFERIOR
+        - alto_categoria
+        - alto_codigo
+        - (espacio_entre_elementos * 2)
+    )
+
+    y_bloque = ALTO - MARGEN - ALTO_BLOQUE_INFERIOR
+
+    y_logo = y_bloque
+
+    y_categoria = (
+        y_logo
+        + alto_logo
+        + espacio_entre_elementos
+    )
+
+    y_codigo = (
+        y_categoria
+        + alto_categoria
+        + espacio_entre_elementos
+    )
+
+
 
     # ================================================================
     # LOGO GRANDE
@@ -567,9 +779,9 @@ def _dibujar_contenido_etiqueta(
     dibujar_logo_centrado(
         datos.marca,
         x_entre_qr,
-        y_marca,
+        y_logo,
         ancho_entre_qr,
-        175,
+        alto_logo,
     )
 
     # ================================================================
@@ -578,9 +790,9 @@ def _dibujar_contenido_etiqueta(
 
     texto(
         x_entre_qr,
-        y_marca + 125,
+        y_categoria,
         ancho_entre_qr,
-        35,
+        alto_categoria,
         datos.categoria,
         tamano=27,
         negrita=True,
@@ -593,9 +805,9 @@ def _dibujar_contenido_etiqueta(
 
     texto(
         x_entre_qr,
-        y_marca + 163,
+        y_codigo,
         ancho_entre_qr,
-        22,
+        alto_codigo,
         datos.codigo,
         tamano=18,
         alineacion=Qt.AlignmentFlag.AlignCenter,
@@ -603,20 +815,44 @@ def _dibujar_contenido_etiqueta(
 
 
 # ======================================================================
-# VISTA PREVIA (en memoria, no toca la impresora)
+# VISTA PREVIA
+# En memoria, no toca la impresora.
 # ======================================================================
 
-def generar_vista_previa_pixmap(datos: DatosEtiquetaFrescas) -> QPixmap:
-    """Genera una imagen con el MISMO diseño que se imprime, para mostrarla
-    en la interfaz. No toca la impresora física."""
-    pixmap = QPixmap(ANCHO, ALTO)
-    pixmap.fill(Qt.GlobalColor.white)
+def generar_vista_previa_pixmap(
+    datos: DatosEtiquetaFrescas,
+) -> QPixmap:
+    """
+    Genera una imagen con el MISMO diseño que se imprime,
+    para mostrarla en la interfaz.
+
+    No toca la impresora física.
+    """
+
+    pixmap = QPixmap(
+        ANCHO,
+        ALTO,
+    )
+
+    pixmap.fill(
+        Qt.GlobalColor.white
+    )
 
     painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
 
-    _dibujar_contenido_etiqueta(painter, datos)
+    painter.setRenderHint(
+        QPainter.RenderHint.Antialiasing
+    )
+
+    painter.setRenderHint(
+        QPainter.RenderHint.TextAntialiasing
+    )
+
+    _dibujar_contenido_etiqueta(
+        painter,
+        datos,
+    )
+
     painter.end()
 
     return pixmap
@@ -630,19 +866,40 @@ def imprimir_etiqueta_frescas(
     datos: DatosEtiquetaFrescas,
     nombre_impresora: str,
 ) -> None:
+
     impresora = crear_impresora(
         nombre_impresora,
         ANCHO_MM,
         ALTO_MM,
     )
 
-    painter = crear_painter(impresora)
+    painter = crear_painter(
+        impresora
+    )
 
     # Mantiene la orientación utilizada por la impresora actual.
-    painter.setWindow(0, 0, 450, 1000)
-    painter.translate(450, 0)
+    # Antes se usaban los números fijos 450 y 1000, que coincidían
+    # "por casualidad" con ALTO y ANCHO. Ahora se usan las constantes
+    # directamente: el contenido siempre queda definido por las
+    # variables (ANCHO/ALTO) y, si el tamaño lógico de la etiqueta
+    # cambia, la impresión respeta ese mismo tamaño automáticamente.
+    painter.setWindow(
+        0,
+        0,
+        ALTO,
+        ANCHO,
+    )
+
+    painter.translate(
+        ALTO,
+        0,
+    )
+
     painter.rotate(90)
 
-    _dibujar_contenido_etiqueta(painter, datos)
+    _dibujar_contenido_etiqueta(
+        painter,
+        datos,
+    )
 
     painter.end()
