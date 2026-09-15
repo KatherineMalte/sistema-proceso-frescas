@@ -58,8 +58,8 @@ ANCHO_CONTENIDO_MIN = 380
 
 class VentanaPrincipal(QWidget):
 
-    def __init__(self, usuario: Usuario, obtener_conexion, app_ventana):
-        super().__init__()
+    def __init__(self, usuario: Usuario, obtener_conexion, app_ventana, parent=None):
+        super().__init__(parent)
         self.usuario = usuario
         self._obtener_conexion = obtener_conexion
         self._app = app_ventana
@@ -93,7 +93,7 @@ class VentanaPrincipal(QWidget):
 
         aplicar_tamano(
             self,
-            modo="completo"
+            modo="completo", ancho_pct=0.7, alto_pct=0.85
         )
 
         self.setStyleSheet("""

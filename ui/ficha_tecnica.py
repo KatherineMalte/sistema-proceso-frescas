@@ -11,11 +11,13 @@ from utils.ventana_utils import aplicar_tamano
 from repositories.obtener_tipo_pza_repository import ObtenerTipoPzaRepository
 from repositories.obtener_tipo_limpieza_repository import ObtenerTipoLimpiezaRepository
 from utils import fechas
-from repositories.etiquetas.frescas_100x45 import construir_datos_etiqueta, imprimir_etiqueta_frescas, generar_vista_previa_pixmap,DatosEtiquetaFrescas,siguiente_consecutivo_etiqueta_canasta
+from repositories.etiquetas.frescas_100x45 import construir_datos_etiqueta, imprimir_etiqueta_frescas, generar_vista_previa_pixmap,DatosEtiquetaFrescas,siguiente_consecutivo_etiqueta_canasta,CODIGO_PROCESO_DEFAULT
 from services.bascula_service import bascula_service
 import shiboken6
 from PySide6.QtPrintSupport import QPrinterInfo
 from PySide6.QtWidgets import QComboBox  # agregar al import existente de QtWidgets
+from services.hstrco_psje_service import registrar_historico_pesaje
+from services.hstrco_psje_service import guardar_historico_pesaje 
 ANCHO_CONTENIDO = 1150
 COLOR_PRIMARIO = "#1a6b6b"
 COLOR_PRIMARIO_OSCURO = "#134f4f"
@@ -82,7 +84,7 @@ class FichaTecnica(QWidget):
         self._grupo_limpieza = None
 
         self.setWindowTitle(f"Ficha técnica - {producto.get('nombre', '')}")
-        aplicar_tamano(self, modo="completo")
+        aplicar_tamano(self, modo="completo" , ancho_pct=0.7, alto_pct=0.85)
         self.setStyleSheet("QWidget { background-color: #F5F8F8; }")
 
         self._crear_interfaz()
@@ -377,7 +379,7 @@ class FichaTecnica(QWidget):
         datos = [
             [("PLU:", self.producto.get("cdgo_plu", "-")), ("Producto:", self.producto.get("nombre", "-"))],
             [("Especie:", self.especie), ("Empresa:", self.empresa)],
-            [("Fecha Empaque:", self.fecha_produccion.strftime("%d/%m/%Y"))],
+            [("Fecha Empacado:", self.fecha_produccion.strftime("%d/%m/%Y"))],
             [("Fecha Beneficio:", formatear_fecha(self.fecha_sacrificio))],
             [(etiqueta_vencimiento, fecha_vencimiento_str)],
             [("Días Vence:", dias_vencimiento if dias_vencimiento is not None else "-")],
@@ -786,7 +788,11 @@ class FichaTecnica(QWidget):
         self._parametros_etiqueta_actuales = self._construir_parametros_etiqueta()
         datos = construir_datos_etiqueta(**self._parametros_etiqueta_actuales)
         imprimir_etiqueta_frescas(datos, self.impresora_seleccionada)
-        #imprimir_etiqueta_frescas(datos, "Godex ZX420i GZPL")
+        registrar_historico_pesaje(
+        self._parametros_etiqueta_actuales,
+        oprdor=self.usuario.nombre_usuario + "-" + CODIGO_PROCESO_DEFAULT,
+        nmro_psta = self.numero_ticket,
+    )
         
     def _limpiar_y_volver(self):
         bascula_service.peso_actualizado.disconnect(self._on_peso_actualizado)

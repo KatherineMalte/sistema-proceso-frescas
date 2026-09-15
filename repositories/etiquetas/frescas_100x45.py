@@ -613,7 +613,7 @@ def _dibujar_contenido_etiqueta(
     fila_dos_columnas(
         y,
         34,
-        f"Fecha Empaque: {fecha_empaque}",
+        f"Fecha Empacado: {fecha_empaque}",
         f"Contenido Neto:{peso_texto}",
         tamano=25,
         negrita_der=True,

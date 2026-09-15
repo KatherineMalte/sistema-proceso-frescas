@@ -1,13 +1,8 @@
-"""
-Funciones reutilizables para el tamaño y posición de las ventanas.
-En vez de repetir esta lógica en cada ventana, todas llaman a
-`aplicar_tamano()` con el modo que necesiten.
-"""
-
+import os
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
-
+from PySide6.QtGui import QPixmap
 
 def _pantalla_disponible():
     return QGuiApplication.primaryScreen().availableGeometry()
@@ -28,7 +23,7 @@ def centrar_ventana(ventana: QWidget, referencia: QWidget = None):
     ventana.move(x, y)
 
 
-def aplicar_tamano(ventana: QWidget, modo: str = "centrado", ancho_pct: float = 0.3, alto_pct: float = 0.4, referencia: QWidget = None):
+def aplicar_tamano(ventana: QWidget, modo: str = "centrado", ancho_pct: float = 0.7, alto_pct: float = 0.85, referencia: QWidget = None):
     """
     Modo global para dimensionar cualquier ventana. Se llama UNA vez,
     típicamente en el __init__ de cada ventana, antes de mostrarla.
@@ -53,3 +48,18 @@ def aplicar_tamano(ventana: QWidget, modo: str = "centrado", ancho_pct: float = 
 
     else:
         raise ValueError(f"Modo de tamaño no reconocido: {modo}")
+    
+def _icono_pixmap(_ruta_icono, nombre_archivo, tamano):
+    """Carga un ícono desde RUTA_ICONOS ya escalado; None si no existe."""
+    ruta = _ruta_icono(nombre_archivo)
+    if not os.path.isfile(ruta):
+        return None
+    pixmap = QPixmap(ruta)
+    if pixmap.isNull():
+        return None
+
+    return pixmap.scaledToWidth(
+        tamano,
+        Qt.SmoothTransformation
+    )
+    #return pixmap.scaled(tamano, tamano, Qt.KeepAspectRatio, Qt.SmoothTransformation)
