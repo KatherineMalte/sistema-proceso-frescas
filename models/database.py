@@ -1,7 +1,3 @@
-"""
-Manejo de conexiones a SQL Server con conexiones persistentes (reutilizables).
-"""
-
 import pyodbc
 from contextlib import contextmanager
 from config.settings import (
@@ -16,14 +12,29 @@ BASES_DE_DATOS = {
 # Cache de conexiones activas: {database_key: conexion}
 _conexiones_activas = {}
 
+def _obtener_driver_disponible():
+    drivers = [d for d in pyodbc.drivers() if "SQL Server" in d]
+    if not drivers:
+        raise RuntimeError(
+            "No se encontró ningún driver ODBC de SQL Server instalado en este sistema."
+        )
+    # Prioriza el más reciente si hay varios
+    for preferido in ("ODBC Driver 18 for SQL Server", "ODBC Driver 17 for SQL Server"):
+        if preferido in drivers:
+            return preferido
+    return drivers[0]  # cualquier otro disponible como último recurso
+
 
 def _crear_conexion(nombre_bd: str):
+    driver = _obtener_driver_disponible()
     return pyodbc.connect(
-        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-        f"SERVER=tcp:{DB_SERVER};"   # sin puerto, deja que resuelva la instancia normalmente
+        f"DRIVER={{{driver}}};"
+        f"SERVER=tcp:{DB_SERVER};"
         f"DATABASE={nombre_bd};"
         f"UID={DB_USER};"
-        f"PWD={DB_PASSWORD};",
+        f"PWD={DB_PASSWORD};"
+        f"Encrypt=yes;"
+        f"TrustServerCertificate=yes;",
         timeout=7,
     )
 

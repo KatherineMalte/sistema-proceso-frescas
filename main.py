@@ -7,6 +7,8 @@ from ui.ventana_fondo import VentanaFondo
 from ui.app_ventana import VentanaApp
 from models.usuarios import Usuario
 from models.database import obtener_conexion
+from PySide6.QtGui import QIcon
+import ctypes
 
 
 class ControladorApp:
@@ -30,13 +32,19 @@ class ControladorApp:
     def abrir_ventana_principal(self, usuario: Usuario):
         self.ventana_fondo.close()
         self.ventana_app = VentanaApp(usuario, obtener_conexion)
-        #self.ventana_app = VentanaApp(usuario, _crear_conexion)
         self.ventana_app.show()
 
 
 def main():
+    if sys.platform == "win32":
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("cialta.frescas.1.0")
     app = QApplication(sys.argv)
     controlador = ControladorApp()  # noqa: F841 (se mantiene viva mientras corre la app)
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(base_dir, "assets", "icons", "icons", "cialtaicono.ico")
+    app.setWindowIcon(QIcon(icon_path))
+    print(os.path.exists(icon_path), icon_path)
     sys.exit(app.exec())
  
  
