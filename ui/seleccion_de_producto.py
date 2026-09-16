@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QGraphicsDropShadowEffect,
 )
-from PySide6.QtGui import QIntValidator
 from utils.ventana_utils import aplicar_tamano, _icono_pixmap
 from repositories.obtener_tipo_pza_repository import ObtenerTipoPzaRepository, TAMANO_PAGINA
 from utils import fechas

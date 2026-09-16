@@ -15,9 +15,9 @@ from repositories.etiquetas.frescas_100x45 import construir_datos_etiqueta, impr
 from services.bascula_service import bascula_service
 import shiboken6
 from PySide6.QtPrintSupport import QPrinterInfo
-from PySide6.QtWidgets import QComboBox  # agregar al import existente de QtWidgets
-from services.hstrco_psje_service import registrar_historico_pesaje
-from services.hstrco_psje_service import guardar_historico_pesaje 
+from PySide6.QtWidgets import QComboBox,QLineEdit  # agregar al import existente de QtWidgets
+from services.hstrco_psje_service import registrar_historico_pesaje,guardar_historico_pesaje
+from PySide6.QtGui import QIntValidator
 ANCHO_CONTENIDO = 1150
 COLOR_PRIMARIO = "#1a6b6b"
 COLOR_PRIMARIO_OSCURO = "#134f4f"
