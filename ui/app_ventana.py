@@ -22,7 +22,6 @@ class VentanaApp(QMainWindow):
         self.pantalla_ficha = None
 
         self.stack_principal.setCurrentWidget(self.pantalla_principal)
-        #self.showFullScreen()
         self.showMaximized()
 
     # --- navegación centralizada ---

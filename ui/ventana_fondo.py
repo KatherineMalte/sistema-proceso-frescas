@@ -37,11 +37,7 @@ class VentanaFondo(QWidget):
             | Qt.WindowMinimizeButtonHint
             | Qt.WindowCloseButtonHint
         )
-        aplicar_tamano(
-            self,
-            modo="completo"
-        )
-
+        
         # ==========================================================
         # IMAGEN DE FONDO
         # ==========================================================
@@ -263,3 +259,8 @@ class VentanaFondo(QWidget):
         self.etiqueta_reloj.setText(
             f"{fecha}   -   {hora}"
         )
+        
+        aplicar_tamano(
+                    self,
+                    modo="completo"
+                )
