@@ -32,7 +32,11 @@ class VentanaFondo(QWidget):
         super().__init__()
 
         self.setWindowTitle("Etiquetas 2 en 1")
-
+        self.setWindowFlags(
+            Qt.Window
+            | Qt.WindowMinimizeButtonHint
+            | Qt.WindowCloseButtonHint
+        )
         aplicar_tamano(
             self,
             modo="completo"

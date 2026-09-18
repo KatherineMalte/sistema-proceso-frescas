@@ -9,7 +9,7 @@ from models.usuarios import Usuario
 from models.database import obtener_conexion
 from PySide6.QtGui import QIcon
 import ctypes
-
+from PySide6.QtCore import Qt
 
 class ControladorApp:
 
@@ -22,12 +22,17 @@ class ControladorApp:
 
     def _mostrar_login(self):
         login = VentanaLogin(self.ventana_fondo)
-        resultado = login.exec()  # bloquea aquí hasta que el usuario entra o cancela
-
+        #resultado = login.exec()   bloquea aquí hasta que el usuario entra o cancela
+        login.setWindowModality(Qt.NonModal)
+        login.finished.connect(self._on_login_terminado)
+        login.show()
+        
+    def _on_login_terminado(self, resultado: int):
         if resultado == QDialog.Accepted:
-            self.abrir_ventana_principal(login.usuario_autenticado)
+            self.abrir_ventana_principal(self.login.usuario_autenticado)
         else:
             sys.exit(0)  # el usuario cerró/canceló el login
+
     
     def abrir_ventana_principal(self, usuario: Usuario):
         self.ventana_fondo.close()
